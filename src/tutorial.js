@@ -7,7 +7,9 @@
  * 'gem' | 'shop' | 'heart'). A step is a test run every frame: most count
  * events since the step began, a few look at where the miner is standing, so
  * a player who got ahead of the prompts is never left stuck on one.
- * Prompts live in i18n.js under `tut.<id>`.
+ * Prompts live in i18n.js under `tut.<id>` (touch controls), with a
+ * `tut.<id>.kb` twin naming the keys wherever a prompt mentions a control;
+ * a desktop gets the keyboard one, a phone the touch one, never both.
  * ========================================================================== */
 
 class Tutorial {
@@ -79,7 +81,13 @@ class Tutorial {
   /** (Re)draw the coach card — also after a language switch. */
   show(game) {
     if (this.step >= Tutorial.STEPS.length) return;
-    game.ui.coach(loc('tut.' + Tutorial.STEPS[this.step].id), this.step + 1, Tutorial.STEPS.length);
+    game.ui.coach(loc(Tutorial.key(Tutorial.STEPS[this.step].id)), this.step + 1, Tutorial.STEPS.length);
+  }
+
+  /** The prompt's i18n key for this device: the keyboard version on a desktop. */
+  static key(id) {
+    const kb = 'tut.' + id + '.kb';
+    return Input.isDesktop() && kb in STRINGS.en ? kb : 'tut.' + id;
   }
 
   /** Put a scripted enemy on the map marker `key`. */
@@ -116,6 +124,9 @@ Tutorial.STEPS = [
       return (p.grounded && Math.floor(p.y) === 8 && p.x >= 14) || p.y > 11;
     },
   },
+  // Dig straight down through the dirt past the ledge into the room below:
+  // the collapse lesson needs dirt overhead, and there is none up here.
+  { id: 'down', done: (t, g) => g.player.y > 11 },
   // Crack the dirt overhead and get out from under it.
   { id: 'collapse', done: (t) => t.since('fall') > 0 },
   // Rock: only dynamite moves it. A player who wasted their sticks gets more.

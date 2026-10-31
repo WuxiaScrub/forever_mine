@@ -76,6 +76,9 @@ A practice mine that teaches the controls and rules, one prompt at a time.
   touches `genVersion`. The lessons, in map order, live in `src/tutorial.js`:
   each step's prompt is `tut.<id>` in i18n and advances when the player has
   done the thing (or is already past it, so nobody gets stuck on one).
+* Prompts name the controls of the device in hand, never both: `tut.<id>`
+  speaks touch (stick, MINE, JUMP, 🧨) and its `tut.<id>.kb` twin names the
+  keys; a desktop browser (`Input.isDesktop()`) gets the `.kb` one.
 * Safe: no eruption clock, no random spawns (one scripted bat and one cave
   bug), slow lava after the Heartstone, and a free get-up in place on death.
 * It counts for nothing: no score, stats, achievements, boards, history or
