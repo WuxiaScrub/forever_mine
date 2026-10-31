@@ -223,3 +223,13 @@ Input.STICK_RADIUS = 52;
 /** How far the drawn knob slides at a full push — it stays inside the ring, so
  *  the aim arrow on the rim is never covered by it. */
 Input.KNOB_TRAVEL = 32;
+
+/**
+ * Is this a computer with a keyboard and mouse rather than a touchscreen?
+ * Decides which control hints the tutorial shows. The app is always touch;
+ * in a browser, a precise pointer that can hover means a desktop.
+ */
+Input.isDesktop = function () {
+  if (Native.app) return false;
+  return !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+};
