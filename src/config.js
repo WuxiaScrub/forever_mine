@@ -468,10 +468,10 @@ const CFG = {
 
   // The daily mine is not an endless mine on a fixed seed: every day is built
   // to one of these plans, rolled from the day's seed, so everyone gets the
-  // same one. Names and blurbs are `shape.<id>.name` / `.desc` in i18n.js.
+  // same one. Names are `shape.<id>.name` in i18n.js.
   // Changing any number here changes the daily's terrain: bump genVersion.
   daily: {
-    layouts: ['faults', 'wide', 'switchback'],
+    layouts: ['faults', 'wide', 'switchback', 'gas'],
     // Rock walls (blast-only) down the height of the mine, splitting it into
     // lanes. Doors are soft gaps between stations; below the last station
     // there are none.
@@ -495,10 +495,15 @@ const CFG = {
     switchback: {
       heartRow: 130,
       top: 9,              // first shelf, rows below the surface lip
-      every: 10,           // rows between shelves (±1)
+      every: [10, 15],     // rows from one shelf to the next, rolled each time
       gap: 5,              // tiles wide, the one soft way through
       reach: 8,            // the gap sits within this many tiles of a wall
       clear: 3,            // rows either side of a station kept shelf-free
+    },
+    // An ordinary mine thick with firedamp: gas pockets at this multiple of a
+    // normal daily's (CFG.gas.pockets[0]), rolled from the seed. Always gas.
+    gas: {
+      mult: [4, 5],
     },
   },
 
