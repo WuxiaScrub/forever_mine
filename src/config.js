@@ -496,7 +496,7 @@ const CFG = {
       heartRow: 130,
       top: 9,              // first shelf, rows below the surface lip
       every: 10,           // rows between shelves (±1)
-      gap: 3,              // tiles wide, the one soft way through
+      gap: 5,              // tiles wide, the one soft way through
       reach: 8,            // the gap sits within this many tiles of a wall
       clear: 3,            // rows either side of a station kept shelf-free
     },
