@@ -466,6 +466,42 @@ const CFG = {
     { id: 'loss',     stat: 'biggestLoss',   levels: [5000, 10000, 20000] },
   ],
 
+  // The daily mine is not an endless mine on a fixed seed: every day is built
+  // to one of these plans, rolled from the day's seed, so everyone gets the
+  // same one. Names and blurbs are `shape.<id>.name` / `.desc` in i18n.js.
+  // Changing any number here changes the daily's terrain: bump genVersion.
+  daily: {
+    layouts: ['faults', 'wide', 'switchback'],
+    // Rock walls (blast-only) down the height of the mine, splitting it into
+    // lanes. Doors are soft gaps between stations; below the last station
+    // there are none.
+    faults: {
+      width: 46,           // a touch wider, so each lane has room to dig
+      walls: 2,            // three lanes
+      thick: 2,            // tiles; one stick of dynamite breaches it
+      wobble: 2.5,         // tiles the wall meanders either side of its line
+      top: 9,              // rows below the surface lip the walls start
+      doors: [0, 2],       // soft doors per wall per stretch between stations
+      doorHeight: 3,
+    },
+    // Wider than deep, with look-alike chambers beside the real one.
+    wide: {
+      width: 72,
+      heartRow: 122,       // shallower than mine 1's 150: the hunt is sideways
+      decoys: 2,           // empty rock shells (a gem stash, no Heartstone)
+      decoyDrift: 3,       // rows a decoy may sit above/below the real one
+    },
+    // Full-width rock shelves with one soft gap, alternating ends.
+    switchback: {
+      heartRow: 130,
+      top: 9,              // first shelf, rows below the surface lip
+      every: 10,           // rows between shelves (±1)
+      gap: 5,              // tiles wide, the one soft way through
+      reach: 8,            // the gap sits within this many tiles of a wall
+      clear: 3,            // rows either side of a station kept shelf-free
+    },
+  },
+
   // The optional online layer (Supabase). Both values are public by design —
   // the publishable key only reaches what the database's row-level security
   // allows. NEVER put the service-role / secret key anywhere in this repo.
@@ -473,7 +509,7 @@ const CFG = {
     url: 'https://uyxpfuhedfqzvxmmjyti.supabase.co',
     key: 'sb_publishable_acqASii6zBrNZ8vDSwbxgg_HfcQltjP',
     gameVersion: '1.0.0',  // compared against app_config.min_game_version
-    genVersion: 2,         // bump whenever world generation changes: the same
+    genVersion: 3,         // bump whenever world generation changes: the same
                            // daily seed must build the same mine for everyone
     nameCooldownDays: 30,  // mirrors app_config.name_cooldown_days (display only)
   },

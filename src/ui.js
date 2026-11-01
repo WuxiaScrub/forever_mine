@@ -594,10 +594,12 @@ class UI {
     const best = save.daily && save.daily.date === today ? save.daily.best : 0;
     const left = Math.max(0, Date.parse(utcDate(1) + 'T00:00:00Z') - Date.now()) / 1000;
     const h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60);
+    const shape = layoutTest() || World.dailyShape(dailySeed(today));
     return `
       <button class="btn daily" id="dailyBtn">
         <span class="daily-k">${loc('title.daily')}</span>
         <span class="daily-v">${loc('title.dailyInfo', { d: today, h, m })}</span>
+        <span class="daily-v shape">${loc('title.dailyShape', { s: loc('shape.' + shape + '.name'), t: loc('shape.' + shape + '.desc') })}</span>
         ${best ? `<span class="daily-v best">${loc('title.dailyBest', { v: fmt(best) })}</span>` : ''}
       </button>`;
   }

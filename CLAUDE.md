@@ -49,8 +49,15 @@ Game Modes
   score, with mines escaped shown beside it. This is the prestige board.
 * Daily Mine — one single mine per UTC day. Its TERRAIN comes from a seed
   derived from the date (and `CFG.online.genVersion`), so everyone digs the same
-  mine; enemies stay random per attempt so they can't be memorised. Mine-1
-  settings and base stats. The seed also rolls whether the day has gas pockets
+  mine; enemies stay random per attempt so they can't be memorised. Base
+  stats. The daily is NOT an endless mine on a fixed seed: the seed also picks
+  one of its own layouts (`CFG.daily`), named on the title's daily button —
+  FAULT LINES (rock walls split the mine into lanes, doorless below the last
+  station, so the Heartstone's lane is picked or blasted into), THE BROAD
+  SEAM (wide and shallow, Heartstone toward one wall beside look-alike decoy
+  chambers) and SWITCHBACKS (full-width rock shelves, one soft gap each at
+  alternating ends). A `?layout=<id>` link playtests one; such a run is never
+  uploaded or kept. The seed also rolls whether the day has gas pockets
   and/or the Tunneler (gentlest level of each), so a day has them for everyone
   or no one; the worm's timing and path stay random per attempt. Unlimited attempts; a player's best score of the day
   counts. Escaping with the Heartstone ends the daily — there is no next mine.

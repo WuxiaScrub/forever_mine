@@ -19,6 +19,7 @@ Run each file in `migrations/`, **in order**, in the Supabase dashboard:
 | `004_name_regex_ascii.sql` | Rewrites `set_display_name`'s character checks as ASCII escapes, so a paste can't break them. |
 | `005_gen_version_2.sql` | Moves the daily board to generator version 2 (gas pockets and the worm in the daily). |
 | `006_hardcore.sql` | Hardcore mode: `runs.mode` may be `hardcore`, its own board (`hardcore_top`), hardcore rank/best in `my_ranks` and `my_profile`, and `app_config.hardcore_score_pct`. |
+| `007_gen_version_3.sql` | Moves the daily board to generator version 3 (the daily's own layouts: fault lines, broad seam, switchbacks). |
 
 Never edit a file that has already been run — add the next number instead. Keep
 migrations plain ASCII: the SQL Editor can silently drop invisible characters
@@ -85,6 +86,7 @@ psql -d fm -f supabase/migrations/002_banned_words.sql
 psql -d fm -f supabase/migrations/004_name_regex_ascii.sql
 psql -d fm -f supabase/migrations/005_gen_version_2.sql
 psql -d fm -f supabase/migrations/006_hardcore.sql
+psql -d fm -f supabase/migrations/007_gen_version_3.sql
 psql -d fm -f supabase/tests/10_behaviour.sql   # ERROR lines are expected rejections
 psql -d fm -f supabase/tests/20_medals.sql
 psql -d fm -f supabase/tests/30_hardcore.sql
