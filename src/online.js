@@ -243,6 +243,18 @@ function utcDate(offsetDays) {
  * deliberately changes every daily, so it must ship with any change to
  * world generation — and with the matching app_config.gen_version.
  */
+/**
+ * A playtest link, `?layout=faults` (or wide / switchback), builds the daily
+ * mine to that plan instead of today's. Such a run is never uploaded or kept
+ * as the day's best — it exists so a plan can be tried before its day comes.
+ */
+function layoutTest() {
+  try {
+    const id = new URLSearchParams(location.search).get('layout');
+    return CFG.daily.layouts.includes(id) ? id : null;
+  } catch (e) { return null; }
+}
+
 function dailySeed(date) {
   const s = 'forevermine-daily|' + date + '|' + CFG.online.genVersion;
   let h = 0x811c9dc5;

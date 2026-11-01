@@ -152,6 +152,7 @@ class Game {
       scoreId: 0, result: null,
       runId: newRunId(), playMs: 0, online: null,
       daily, dailyRecord: false,
+      layoutTest: daily ? layoutTest() : null,
       hardcore: mode === 'hardcore', kit: null,
       revived: false,          // the one ad revive this run gets
     };
@@ -221,17 +222,22 @@ class Game {
     Sfx.stopRumble();
 
     const mine = this.campaign.mine;
-    const heartRow = CFG.world.heartstoneRow + (mine - 1) * CFG.campaign.heartstoneStep;
     const tut = !!this.campaign.tutorial;
+    const seed = this.campaign.daily ? dailySeed(this.campaign.daily) : (Math.random() * 0xffffffff) >>> 0;
+    // A daily mine is built to the day's plan (CFG.daily). A playtest link
+    // (?layout=<id>) can pick the plan instead; such a run is never uploaded.
+    const shape = this.campaign.daily ? (this.campaign.layoutTest || World.dailyShape(seed)) : null;
+    this.campaign.shape = shape;
+    const heartRow = (shape && CFG.daily[shape].heartRow) ||
+      CFG.world.heartstoneRow + (mine - 1) * CFG.campaign.heartstoneStep;
     this.tutorial = tut ? new Tutorial() : null;
     // The practice mine has no eruption clock: the Heartstone is the only thing that wakes it.
     this.fuse = tut ? Infinity : CFG.lava.fuse + (mine - 1) * CFG.campaign.fusePerMine;
 
-    const seed = this.campaign.daily ? dailySeed(this.campaign.daily) : (Math.random() * 0xffffffff) >>> 0;
     const hz = tut ? { gas: 0, worm: 0 } : this.hazards(seed);
     const hard = this.campaign.hardcore;
     this.world = new World(seed, this, heartRow, hz.gas, tut ? CFG.tutorial.map : null,
-      hard ? CFG.hardcore.lanternSpacing : 1);
+      hard ? CFG.hardcore.lanternSpacing : 1, shape);
     this.player = new Player(this.world.spawnPoint.x, this.world.spawnPoint.y, this.campaign.upgrades);
     // Hardcore: the wounds and the empty satchel come down with you.
     const kit = this.campaign.kit;
@@ -286,7 +292,7 @@ class Game {
     if (!quiet && !tut) {
       this.save.bestMine = Math.max(this.save.bestMine || 0, mine);
       this.persist();
-      this.ui.toast(this.campaign.daily ? loc('toast.daily', { d: this.campaign.daily })
+      this.ui.toast(this.campaign.daily ? loc('toast.daily', { d: this.campaign.daily, s: loc('shape.' + shape + '.name') })
         : mine > 1 ? loc('toast.mineN', { n: mine })
         : hard ? loc('toast.hardcore') : loc('toast.digDown'), 1800);
     }
@@ -341,7 +347,9 @@ class Game {
     this.save.best = Math.max(this.save.best || 0, this.runStats.depth);
     c.depth = Math.max(c.depth, this.runStats.depth);
 
-    if (c.daily) {
+    if (c.daily && c.layoutTest) {
+      // A playtest of a plan that is not today's: it counts for nothing.
+    } else if (c.daily) {
       // A daily attempt never touches the endless haul board; it keeps its own
       // best-of-the-day instead.
       const d = this.save.daily && this.save.daily.date === c.daily ? this.save.daily : { date: c.daily, best: 0 };
@@ -381,7 +389,7 @@ class Game {
    */
   submitOnline(kind) {
     const c = this.campaign;
-    if (!Online.enabled) return;
+    if (!Online.enabled || c.layoutTest) return;
     c.online = { state: 'sending' };
     Online.submitRun({
       client_run_id: c.runId,

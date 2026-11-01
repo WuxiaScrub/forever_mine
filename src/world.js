@@ -11,8 +11,10 @@ class World {
    * `gasPockets` is how many gas pockets per 100 rows it hides (0 = none).
    * `spacing` stretches the gap between stations (hardcore: 2 = every other
    * one left out). The first station stays where it always is.
+   * `shape` is a daily mine's plan (see `CFG.daily`): 'faults', 'wide' or
+   * 'switchback'. Anything else builds the ordinary endless mine.
    */
-  constructor(seed, game, heartRow, gasPockets, layout, spacing) {
+  constructor(seed, game, heartRow, gasPockets, layout, spacing, shape) {
     this.game = game;
     this.seed = seed >>> 0;
     this.rng = new RNG(seed);
@@ -21,7 +23,8 @@ class World {
     this.stationFirst = CFG.world.checkpointEvery;
     this.stationEvery = CFG.world.checkpointEvery * (spacing || 1);
     // `layout` is a fixed map (the tutorial's): its size replaces the generated one.
-    this.w = layout ? layout[0].length : CFG.world.width;
+    this.shape = !layout && CFG.daily.layouts.includes(shape) ? shape : null;
+    this.w = layout ? layout[0].length : (this.shape && CFG.daily[this.shape].width) || CFG.world.width;
     this.h = layout ? layout.length : this.heartRow + CFG.world.bottomPad;
     this.surface = CFG.world.surfaceRow;
 
@@ -142,7 +145,13 @@ class World {
 
     this.carveSurface();
     this.carveCheckpoints();
-    this.carveHeartstoneChamber();
+    // A daily plan's walls go in on their own RNG, after the stations, so the
+    // lanterns still span the mine and the shared noise above is untouched.
+    const plan = new RNG(seed ^ 0x51ab0c3d);
+    if (this.shape === 'faults') this.carveFaults(plan);
+    if (this.shape === 'switchback') this.carveShelves(plan);
+    if (this.shape === 'wide') this.carveWideChambers(plan);
+    else this.carveHeartstoneChamber(this.shape === 'faults' ? this.faultLaneX(plan) : this.rng.int(8, this.w - 9));
     this.ensureRowsPassable();
     if (this.gasPockets > 0) this.placeGasPockets();
   }
@@ -321,10 +330,113 @@ class World {
     }
   }
 
-  /** The Heartstone sits in a rock-ringed cavern at the bottom of the mine. */
-  carveHeartstoneChamber() {
-    const cy = this.heartRow;
-    const cx = this.rng.int(8, this.w - 9);
+  /* ---------------------------------------------------- daily mine plans */
+
+  /** Which plan a daily seed builds. Pure: the title screen asks it too. */
+  static dailyShape(seed) {
+    const list = CFG.daily.layouts;
+    return list[new RNG((seed ^ 0x7d3e91a5) >>> 0).int(0, list.length - 1)];
+  }
+
+  /** Is row `y` a station's two open rows or its floor? */
+  inStation(y) {
+    if (y < this.surface + this.stationFirst || y >= this.heartRow - 12) return false;
+    return this.stationRel(y) <= 2;
+  }
+
+  /**
+   * FAULT LINES: rock walls run the height of the mine and split it into
+   * side-by-side lanes. Rock cannot be dug, only blasted. Each wall has a
+   * soft door or two in the stretch between stations; below the last station
+   * it has none, so the lane the Heartstone sits in has to be picked — or
+   * blasted into. The station rows still cross the whole mine, so a lantern
+   * is never on the wrong side of a wall.
+   */
+  carveFaults(rng) {
+    const F = CFG.daily.faults;
+    const top = this.surface + F.top;
+    const bottom = this.h - 2;
+    const lastStation = this.checkpoints.reduce((m, c) => c.home ? m : Math.max(m, c.y), 0);
+    this.faultX = [];
+    for (let k = 1; k <= F.walls; k++) {
+      const base = Math.round(k * (this.w - 1) / (F.walls + 1));
+      this.faultX.push(base);
+      const phase = rng.range(0, 100);
+      // Doors: a soft gap at a random height in each stretch between stations.
+      const doors = [];
+      for (let r = top; r < lastStation; r += this.stationEvery) {
+        const n = rng.int(F.doors[0], F.doors[1]);
+        for (let j = 0; j < n; j++) doors.push(rng.int(r + 4, Math.min(lastStation, r + this.stationEvery) - 5));
+      }
+      for (let y = top; y <= bottom; y++) {
+        if (this.inStation(y)) continue;
+        // The wall wanders a little, so it reads as a fault, not a ruler line.
+        const x0 = base + Math.round(Math.sin(y / 9 + phase) * F.wobble + Math.sin(y / 3.7 + phase * 2) * 0.6);
+        const door = doors.some(d => y >= d && y < d + F.doorHeight);
+        for (let x = x0; x < x0 + F.thick; x++) {
+          if (x < 2 || x > this.w - 3) continue;
+          if (door) this.set(x, y, T.DIRT, CFG.mining.dirtHits);
+          else this.set(x, y, T.ROCK);
+        }
+      }
+    }
+  }
+
+  /** The middle of a lane between fault walls, for the Heartstone chamber. */
+  faultLaneX(rng) {
+    const edges = [0, ...this.faultX, this.w - 1];
+    const lane = rng.int(0, edges.length - 2);
+    return clamp(Math.round((edges[lane] + edges[lane + 1]) / 2), 8, this.w - 9);
+  }
+
+  /**
+   * SWITCHBACKS: rock shelves span the mine every few rows, each with a single
+   * soft gap at alternating ends. The way down zig-zags, and so does the way
+   * back up with the lava behind you — unless a stick of dynamite is spent to
+   * cut a straight shaft. Shelves keep clear of the stations and the opening.
+   */
+  carveShelves(rng) {
+    const S = CFG.daily.switchback;
+    let side = rng.chance(0.5) ? 1 : -1;
+    for (let y = this.surface + S.top; y < this.heartRow - 10; y += S.every + rng.int(-1, 1)) {
+      const rel = this.stationRel(y);
+      if (y >= this.surface + this.stationFirst - 4 && y < this.heartRow - 12 &&
+          (rel <= 2 + S.clear || rel >= this.stationEvery - S.clear)) continue;
+      const gw = S.gap;
+      const gx = side > 0 ? rng.int(this.w - 2 - S.reach, this.w - 2 - gw) : rng.int(2, 1 + S.reach - gw);
+      for (let x = 1; x < this.w - 1; x++) {
+        if (x >= gx && x < gx + gw) this.set(x, y, T.DIRT, CFG.mining.dirtHits);
+        else this.set(x, y, T.ROCK);
+      }
+      side = -side;
+    }
+  }
+
+  /**
+   * THE BROAD SEAM: a mine much wider than the endless one and not as deep.
+   * The Heartstone sits out toward one wall, and the same depth holds
+   * `decoys` look-alike chambers — rock shells with a stash of gems inside
+   * and no Heartstone. From outside, in the dark, they are the same.
+   */
+  carveWideChambers(rng) {
+    const D = CFG.daily.wide;
+    // Slots spread evenly across the mine; the Heartstone takes an end one.
+    const n = D.decoys + 1;
+    const slots = [];
+    for (let k = 0; k < n; k++) slots.push(Math.round(10 + k * (this.w - 21) / (n - 1)) + rng.int(-2, 2));
+    const heart = rng.chance(0.5) ? 0 : n - 1;
+    slots.forEach((x, k) => {
+      if (k !== heart) this.carveHeartstoneChamber(x, this.heartRow + rng.int(-D.decoyDrift, D.decoyDrift), true);
+    });
+    this.carveHeartstoneChamber(slots[heart]);
+  }
+
+  /**
+   * The Heartstone sits in a rock-ringed cavern at the bottom of the mine.
+   * A `decoy` chamber is the same shell with a gem stash where the prize would be.
+   */
+  carveHeartstoneChamber(cx, cy, decoy) {
+    cy = cy || this.heartRow;
     const rx = 6.5, ry = 4.2;
 
     for (let y = cy - 7; y <= cy + 7; y++) {
@@ -337,8 +449,12 @@ class World {
     }
     // A pedestal of rock under the prize.
     for (let x = cx - 2; x <= cx + 2; x++) this.set(x, cy + 1, T.ROCK);
-    this.set(cx, cy, T.HEART, 3);
-    this.heartstone = { x: cx, y: cy };
+    if (decoy) {
+      for (let x = cx - 1; x <= cx + 1; x++) this.set(x, cy, T.GEM, CFG.mining.gemHits, 3 + (x === cx ? 1 : 0));
+    } else {
+      this.set(cx, cy, T.HEART, 3);
+      this.heartstone = { x: cx, y: cy };
+    }
 
     // A ring of high-tier gems as bait.
     for (let k = 0; k < 14; k++) {
