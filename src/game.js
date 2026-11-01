@@ -196,10 +196,13 @@ class Game {
     const level = (list, from) => list[Math.min(c.mine - from, list.length - 1)];
     if (c.daily) {
       const r = new RNG(seed ^ 0x2c1b3c6d);
-      return {
+      const hz = {
         gas: r.chance(CFG.gas.dailyChance) ? CFG.gas.pockets[0] : 0,
         worm: r.chance(CFG.worm.dailyChance) ? CFG.worm.every[0] : 0,
       };
+      // The FIREDAMP plan: always gas, several times a normal daily's.
+      if (c.shape === 'gas') hz.gas = CFG.gas.pockets[0] * new RNG(seed ^ 0x3f9a17c5).range(...CFG.daily.gas.mult);
+      return hz;
     }
     return {
       gas: c.mine >= CFG.gas.fromMine ? level(CFG.gas.pockets, CFG.gas.fromMine) : 0,

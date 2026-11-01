@@ -55,8 +55,9 @@ Game Modes
   FAULT LINES (rock walls split the mine into lanes, doorless below the last
   station, so the Heartstone's lane is picked or blasted into), THE BROAD
   SEAM (wide and shallow, Heartstone toward one wall beside look-alike decoy
-  chambers) and SWITCHBACKS (full-width rock shelves, one soft gap each at
-  alternating ends). A `?layout=<id>` link playtests one; such a run is never
+  chambers), SWITCHBACKS (full-width rock shelves 10–15 rows apart, one soft
+  gap each at alternating ends) and FIREDAMP (an ordinary mine with 4–5× a
+  normal daily's gas pockets). A `?layout=<id>` link playtests one; such a run is never
   uploaded or kept. The seed also rolls whether the day has gas pockets
   and/or the Tunneler (gentlest level of each), so a day has them for everyone
   or no one; the worm's timing and path stay random per attempt. Unlimited attempts; a player's best score of the day

@@ -12,7 +12,8 @@ class World {
    * `spacing` stretches the gap between stations (hardcore: 2 = every other
    * one left out). The first station stays where it always is.
    * `shape` is a daily mine's plan (see `CFG.daily`): 'faults', 'wide' or
-   * 'switchback'. Anything else builds the ordinary endless mine.
+   * 'switchback' reshape the mine; 'gas' (and anything else) builds the
+   * ordinary endless mine — its extra firedamp comes in via `gasPockets`.
    */
   constructor(seed, game, heartRow, gasPockets, layout, spacing, shape) {
     this.game = game;
@@ -398,7 +399,7 @@ class World {
   carveShelves(rng) {
     const S = CFG.daily.switchback;
     let side = rng.chance(0.5) ? 1 : -1;
-    for (let y = this.surface + S.top; y < this.heartRow - 10; y += S.every + rng.int(-1, 1)) {
+    for (let y = this.surface + S.top; y < this.heartRow - 10; y += rng.int(S.every[0], S.every[1])) {
       const rel = this.stationRel(y);
       if (y >= this.surface + this.stationFirst - 4 && y < this.heartRow - 12 &&
           (rel <= 2 + S.clear || rel >= this.stationEvery - S.clear)) continue;

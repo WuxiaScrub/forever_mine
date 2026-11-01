@@ -599,7 +599,7 @@ class UI {
       <button class="btn daily" id="dailyBtn">
         <span class="daily-k">${loc('title.daily')}</span>
         <span class="daily-v">${loc('title.dailyInfo', { d: today, h, m })}</span>
-        <span class="daily-v shape">${loc('title.dailyShape', { s: loc('shape.' + shape + '.name'), t: loc('shape.' + shape + '.desc') })}</span>
+        <span class="daily-v shape">${loc('shape.' + shape + '.name')}</span>
         ${best ? `<span class="daily-v best">${loc('title.dailyBest', { v: fmt(best) })}</span>` : ''}
       </button>`;
   }
