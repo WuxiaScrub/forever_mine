@@ -682,13 +682,32 @@ body.attract #toast, body.attract #banner, body.attract #hint { display: none; }
 }
 .shop-item .ico svg { width: 24px; height: 24px; }
 .shop-item .info { flex: 1; min-width: 0; }
-.shop-item .nm-row { display: flex; align-items: baseline; gap: 8px; }
+.shop-item .nm-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
 .shop-item .nm { font-size: var(--fs-md); font-weight: 800; }
 .shop-item .lv {
   font-size: var(--fs-xs); font-weight: 800; color: var(--dim);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .shop-item .ds { font-size: var(--fs-sm); color: var(--dim); font-weight: 600; line-height: 1.35; }
+/* A maxed upgrade folds to one slim line: nothing left to decide there. */
+.shop-item.maxed { padding: 6px 11px; opacity: .7; }
+.shop-item.maxed .ico { width: 28px; height: 28px; border-radius: 8px; }
+.shop-item.maxed .ico svg { width: 18px; height: 18px; }
+.shop-item.maxed .nm { font-size: var(--fs-sm); }
+.shop-item .maxed-tag {
+  flex-shrink: 0; font-size: var(--fs-xs); font-weight: 900;
+  letter-spacing: .06em; color: var(--gold);
+}
+.shop-item .new-tag {
+  font-size: var(--fs-xs); font-weight: 900; letter-spacing: .08em;
+  color: #1a1030; background: var(--gold);
+  border-radius: 6px; padding: 1px 6px;
+}
+/* What deeper lanterns still hold: one line, not a wall of greyed rows. */
+.shop-locked {
+  font-size: var(--fs-sm); font-weight: 700; color: var(--dim);
+  text-align: center; padding: 8px 6px 4px;
+}
 .pips { display: flex; gap: 3px; margin-top: 6px; }
 .pip { width: 15px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.18); }
 .pip.on { background: var(--gold); }
