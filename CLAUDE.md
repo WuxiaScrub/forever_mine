@@ -284,6 +284,15 @@ Initial upgrades:
 
 Keep upgrades simple and data-driven.
 
+The shop opens up as the player goes, so the first lantern is a short list.
+Each upgrade has a `tier` (the first lantern of a mine that sells it, counted
+by depth) and a `group` (Survival / Getting around / Digging headings) in
+`CFG.upgrades`. In a later Endless mine every lantern counts as at least the
+mine's number, so from mine 3 the first lantern sells everything; the daily is
+one mine, so it unlocks by lantern alone. Locked upgrades are one "deeper
+lanterns sell more" line, never greyed rows; an upgrade appearing for the first
+time in a campaign is tagged NEW, and a maxed one folds to a slim line.
+
 Dynamite is a consumable the shop SELLS. Reaching a checkpoint never refills
 the satchel for free — spending gems on charges is part of the risk budget. A
 mine still starts with a full satchel, and the hard hat still re-forms for free.

@@ -18,6 +18,7 @@ const SHOP_ICONS = {
   light: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 0 1 17 0z" fill="#6a53c9"/><circle cx="12" cy="12" r="3.6" fill="#ffe7a3"/><path d="M12 15.6V22M8.5 15l-2.8 5.3M15.5 15l2.8 5.3" stroke="#ffc95e" stroke-width="1.7" stroke-linecap="round" opacity=".85"/></svg>',
   dynamite: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7c0-2.6 1.8-4 4-4s4 1.4 4 4" stroke="#8a6040" stroke-width="2" fill="none"/><rect x="3.5" y="7" width="17" height="14" rx="3.5" fill="#a5723f"/><rect x="3.5" y="7" width="17" height="5" rx="2.5" fill="#c9905a"/><rect x="10.5" y="10.5" width="3" height="3.5" rx="1" fill="#ffc95e"/></svg>',
   helmet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 17.5h20V20H2zM5 17.5V13a7 7 0 0 1 14 0v4.5z" fill="#ffc95e"/><path d="M10.5 6.2h3v6h-3z" fill="#e0a63c"/></svg>',
+  pick: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21.5 14.5 11" stroke="#a5723f" stroke-width="2.6" stroke-linecap="round"/><path d="M5.5 6.5C9 3 15 2.5 19.5 4.5c2 4.5 1.5 10.5-2 14-.5-4.5-2-7.5-4-9.5s-5-3.5-8-2.5z" fill="#c9d4e6"/><path d="M19.5 4.5c2 4.5 1.5 10.5-2 14" stroke="#7ef0d0" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>',
   blast: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5l2.4 5.6 5.5-2.6-2.3 5.6 5.4 2-5.4 2 2.3 5.6-5.5-2.6L12 22.7l-2.4-5.6-5.5 2.6 2.3-5.6-5.4-2 5.4-2-2.3-5.6 5.5 2.6z" fill="#ff7a3c"/><circle cx="12" cy="12" r="4.2" fill="#ffd08a"/></svg>',
 };
 
@@ -1019,19 +1020,43 @@ class UI {
           p.health >= p.maxHealth ? 'full' : cash < game.healCost(p) ? 'poor' : '')),
     ].join('');
 
-    const items = CFG.upgrades.map(u => {
+    // Upgrades, grouped under short headings. Only what this lantern's tier
+    // sells is listed; the rest is one line saying deeper lanterns have more.
+    // A maxed upgrade folds to a single line so later shops get shorter.
+    const tier = o.tier || 1;
+    const fresh = o.fresh || {};
+    const upRow = (u) => {
       const lvl = game.campaign.upgrades[u.id] || 0;
-      const maxed = lvl >= u.max;
+      const name = loc('up.' + u.id + '.name');
+      if (lvl >= u.max) {
+        return `
+      <div class="shop-item maxed">
+        <div class="ico">${SHOP_ICONS[u.id] || ''}</div>
+        <div class="info"><span class="nm">${name}</span></div>
+        <span class="maxed-tag">✓ ${loc('shop.max')}</span>
+      </div>`;
+      }
       const cost = game.upgradeCost(u, lvl);
       const pips = Array.from({ length: u.max }, (_, i) =>
         `<div class="pip ${i < lvl ? 'on' : ''}"></div>`).join('');
       return row(u.id,
-        `<div class="nm-row"><span class="nm">${loc('up.' + u.id + '.name')}</span>` +
-          (u.max > 1 ? `<span class="lv">${loc('shop.level', { n: lvl, max: u.max })}</span>` : '') + '</div>',
+        `<div class="nm-row"><span class="nm">${name}</span>` +
+          (u.max > 1 ? `<span class="lv">${loc('shop.level', { n: lvl, max: u.max })}</span>` : '') +
+          (fresh[u.id] ? `<span class="new-tag">${loc('shop.new')}</span>` : '') + '</div>',
         loc('up.' + u.id + '.desc', game.upgradeDescParams(u, lvl)),
         `<div class="pips">${pips}</div>`,
-        buy(`data-up="${u.id}"`, cost, maxed ? 'max' : cash < cost ? 'poor' : ''));
+        buy(`data-up="${u.id}"`, cost, cash < cost ? 'poor' : ''));
+    };
+    const open = CFG.upgrades.filter(u => u.tier <= tier);
+    const locked = CFG.upgrades.length - open.length;
+    const groups = CFG.upgradeGroups.map(gid => {
+      const list = open.filter(u => u.group === gid);
+      if (!list.length) return '';
+      // Maxed ones sink to the bottom of their group, out of the way.
+      list.sort((a, b) => ((game.campaign.upgrades[a.id] || 0) >= a.max) - ((game.campaign.upgrades[b.id] || 0) >= b.max));
+      return `<div class="shop-section">${loc('shop.group.' + gid)}</div><div class="shop-list">${list.map(upRow).join('')}</div>`;
     }).join('');
+    const lockedLine = locked ? `<div class="shop-locked">🔒 ${loc('shop.locked', { n: locked })}</div>` : '';
 
     // Header and the way out stay put; only the list between them scrolls.
     this._repaint = () => this.shop(game, o);
@@ -1048,8 +1073,8 @@ class UI {
       </div>
       <div class="shop-scroll">
         ${supplies ? `<div class="shop-section">${loc('shop.supplies')}</div><div class="shop-list">${supplies}</div>` : ''}
-        <div class="shop-section">${loc('shop.upgrades')}</div>
-        <div class="shop-list">${items}</div>
+        ${groups}
+        ${lockedLine}
       </div>
       <div class="shop-foot">
         <button class="btn" id="closeShop">${res(o.closeLabel, 'shop.back')}</button>

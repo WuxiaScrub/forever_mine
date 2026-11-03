@@ -326,16 +326,24 @@ const CFG = {
   // ceiling (hearts, dynamite) the two are tuned to meet exactly.
   // A level costs base * step^level, and every level after the first is
   // marked up by `upgradeMarkup` on top.
+  //
+  // The shop opens up as the player goes, so the first lantern is a short,
+  // readable list. `tier` is the first lantern that sells an upgrade, counted
+  // down the stations of the current mine; in a later campaign mine every
+  // lantern counts as at least that mine's number, so by mine 3 the first
+  // lantern sells everything. (The daily is one mine, so it unlocks by lantern
+  // alone.) `group` is the heading it is listed under, in `upgradeGroups` order.
   upgradeMarkup: 1.5,
+  upgradeGroups: ['survival', 'move', 'dig'],
   upgrades: [
-    { id: 'health',   max: 7, base: 150, step: 2.00 },  // 3 + 7 = 10 hearts
-    { id: 'speed',    max: 5, base: 60,  step: 1.80 },
-    { id: 'jump',     max: 4, base: 65,  step: 1.85 },
-    { id: 'light',    max: 5, base: 80,  step: 1.75 },
-    { id: 'dynamite', max: 9, base: 90,  step: 1.90 },  // 3 + 2/lvl, capped at 20
-    { id: 'helmet',   max: 3, base: 55,  step: 2.00 },
-    { id: 'blast',    max: 1, base: 1000, step: 1 },    // 3x3 -> 5x5 dynamite
-    { id: 'pick',     max: 8, base: 500, step: 1.40 },  // 30% -> 100% one-swing dirt
+    { id: 'health',   group: 'survival', tier: 1, max: 7, base: 150, step: 2.00 },  // 3 + 7 = 10 hearts
+    { id: 'helmet',   group: 'survival', tier: 1, max: 3, base: 55,  step: 2.00 },
+    { id: 'speed',    group: 'move',     tier: 1, max: 5, base: 60,  step: 1.80 },
+    { id: 'jump',     group: 'move',     tier: 1, max: 4, base: 65,  step: 1.85 },
+    { id: 'light',    group: 'move',     tier: 1, max: 5, base: 80,  step: 1.75 },
+    { id: 'dynamite', group: 'dig',      tier: 2, max: 9, base: 90,  step: 1.90 },  // 3 + 2/lvl, capped at 20
+    { id: 'pick',     group: 'dig',      tier: 2, max: 8, base: 500, step: 1.40 },  // 30% -> 100% one-swing dirt
+    { id: 'blast',    group: 'dig',      tier: 3, max: 1, base: 1000, step: 1 },    // 3x3 -> 5x5 dynamite
   ],
 
   upgradeEffect: {

@@ -612,14 +612,40 @@ class Game {
       return bits.join(' · ');
     };
 
+    // What this lantern sells depends on how deep it is (CFG.upgrades `tier`).
+    // The ids it shows are remembered for the campaign, so an upgrade a deeper
+    // lantern opens up can be marked NEW the first time it appears.
+    const tier = this.lanternTier(cp);
+    const seen = this.campaign.shopSeen || (this.campaign.shopSeen = {});
+    const fresh = {};
+    for (const u of CFG.upgrades) {
+      if (u.tier > tier || seen[u.id]) continue;
+      if (u.tier > 1) fresh[u.id] = true;
+      seen[u.id] = true;
+    }
+    this.shopTier = tier;
+
     this.openPanel(() => this.ui.shop(this, {
       title: () => loc('shop.supplyLantern'),
       sub,
       note: () => loc('shop.singleUse'),
+      tier,
+      fresh,
     }));
     if (this.player.hasHeartstone) {
       setTimeout(() => this.ui.toast(loc('toast.heartstoneAtSurface'), 2600), 400);
     }
+  }
+
+  /**
+   * Which shop tier a lantern opens: its place among this mine's stations
+   * (1 = the shallowest), raised to the campaign's mine number so later mines
+   * don't make a veteran wait for the full shop.
+   */
+  lanternTier(cp) {
+    let n = 1;
+    for (const c of this.world.checkpoints) if (!c.home && c.y < cp.y) n++;
+    return Math.max(n, this.campaign.mine || 1);
   }
 
   /**
@@ -714,7 +740,7 @@ class Game {
 
   buyUpgrade(id) {
     const u = CFG.upgrades.find(x => x.id === id);
-    if (!u) return;
+    if (!u || u.tier > (this.shopTier || 1)) return;
     const ups = this.campaign.upgrades;
     const lvl = ups[id] || 0;
     if (lvl >= u.max) return;
