@@ -654,7 +654,13 @@ class UI {
     return m ? `<span class="medals">${m}</span>` : '';
   }
 
-  /** Loading / offline / error line shared by the online panels. */
+  /** The medal board's tally: all three counts, zeros too, so the columns line up. */
+  medalCols(r) {
+    return ['gold', 'silver', 'bronze'].map(k =>
+      `<span class="medal-count ${k}${r[k] ? '' : ' zero'}"><span class="medal ${k}"></span>${r[k] || 0}</span>`).join('');
+  }
+
+    /** Loading / offline / error line shared by the online panels. */
   onlineStatus(res, emptyKey, isEmpty) {
     if (!res) return `<div class="score-empty">${loc('board.loading')}</div>`;
     if (!res.ok) return `<div class="score-empty">${loc(res.offline ? 'board.offline' : 'board.error')}</div>`;
@@ -664,7 +670,8 @@ class UI {
 
   /**
    * The global boards: Endless and Hardcore (all time), Today's daily,
-   * Yesterday's daily with its podium. Draws at once with a loading line, then again when the
+   * Yesterday's daily with its podium, and the medal table (golds, then
+   * silvers, then bronzes). Draws at once with a loading line, then again when the
    * data lands — but only if the player is still looking at this panel.
    */
   leaderboards(tab) {
@@ -673,7 +680,13 @@ class UI {
       this._repaint = draw;
       const rows = st.res && st.res.ok && Array.isArray(st.res.data) ? st.res.data : [];
       const daily = tab === 'today' || tab === 'yesterday';
-      const list = rows.map(r => `
+      const medals = tab === 'medals';
+      const list = rows.map(r => medals ? `
+        <div class="score-row board-row${r.me ? ' you' : ''}">
+          <span class="rk">${r.rank}</span>
+          <span class="nm">${this.playerName(r.name, r.tag)}</span>
+          <span class="vv medal-cols">${this.medalCols(r)}</span>
+        </div>` : `
         <div class="score-row board-row${r.me ? ' you' : ''}">
           <span class="rk">${r.medal ? `<span class="medal ${r.medal}"></span>` : r.rank}</span>
           <span class="nm">${this.playerName(r.name, r.tag)}${this.medalTally(r)}</span>
@@ -686,22 +699,23 @@ class UI {
       // Your own standing when you are off the bottom of the list.
       const rk = st.ranks && st.ranks.ok && Array.isArray(st.ranks.data) ? st.ranks.data[0] : null;
       const myRank = rk && (tab === 'endless' ? rk.endless_rank : tab === 'hardcore' ? rk.hardcore_rank
-        : tab === 'today' ? rk.daily_rank : null);
+        : tab === 'today' ? rk.daily_rank : medals ? rk.medals_rank : null);
       const myBest = rk && (tab === 'endless' ? rk.endless_best : tab === 'hardcore' ? rk.hardcore_best : rk.daily_best);
       const pinned = myRank && !rows.some(r => r.me) ? `
         <div class="score-row board-row you pinned">
           <span class="rk">${myRank}</span><span class="nm">${loc('board.you')}</span>
-          <span class="vv">${fmt(myBest)}</span><span class="dd"></span>
+          ${medals ? '' : `<span class="vv">${fmt(myBest)}</span><span class="dd"></span>`}
         </div>` : '';
 
       const tabBtn = (k) => `<button class="tab${k === tab ? ' on' : ''}" data-tab="${k}">${loc('board.' + k)}</button>`;
       this.show(`
         <h2>${loc('board.title')}</h2>
-        <div class="sub">${loc(daily ? 'board.dailySub' : tab === 'hardcore' ? 'board.hardcoreSub' : 'board.endlessSub',
+        <div class="sub">${loc(daily ? 'board.dailySub' : tab === 'hardcore' ? 'board.hardcoreSub'
+          : medals ? 'board.medalsSub' : 'board.endlessSub',
           { d: tab === 'today' ? utcDate(0) : utcDate(-1), p: Math.round(CFG.hardcore.scoreBonus * 100) })}</div>
-        <div class="tabs">${tabBtn('endless')}${tabBtn('hardcore')}${tabBtn('today')}${tabBtn('yesterday')}</div>
+        <div class="tabs">${tabBtn('endless')}${tabBtn('hardcore')}${tabBtn('medals')}${tabBtn('today')}${tabBtn('yesterday')}</div>
         <div class="scores board">
-          ${this.onlineStatus(st.res, daily ? 'board.emptyDaily' : 'board.empty', !rows.length)}
+          ${this.onlineStatus(st.res, daily ? 'board.emptyDaily' : medals ? 'board.emptyMedals' : 'board.empty', !rows.length)}
           ${list}${pinned}
         </div>
         ${this.backButton()}
@@ -714,7 +728,7 @@ class UI {
     draw();
 
     const req = tab === 'endless' ? Online.endlessTop(50) : tab === 'hardcore' ? Online.hardcoreTop(50)
-      : Online.dailyTop(utcDate(tab === 'today' ? 0 : -1), 50);
+      : tab === 'medals' ? Online.medalsTop(50) : Online.dailyTop(utcDate(tab === 'today' ? 0 : -1), 50);
     Promise.all([req, Online.myRanks()]).then(([res, ranks]) => {
       st.res = res; st.ranks = ranks;
       if (this._repaint === draw && this.isOpen) draw();

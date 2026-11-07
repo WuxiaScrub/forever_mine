@@ -18,7 +18,7 @@ fully playable offline at every step.
 | Endless board | Global, ranked by campaign score; shows mines escaped. The prestige board. |
 | Hardcore | Endless only. Half the supply lanterns (every other station, the first kept), health and dynamite not refilled between mines, the revive gets you up on 3 hearts. Every haul through the camp scores +50% (`CFG.hardcore`). Stored as `mode = 'hardcore'` on its own board (`hardcore_top`), never mixed with the endless one. Migration `006_hardcore.sql`. |
 | Daily mine | One single mine per UTC day. Same terrain seed for everyone; enemies stay random per attempt. Each day is built to one of the daily's own layouts (`CFG.daily`: fault lines, broad seam, switchbacks, firedamp), rolled from the seed — generator version 3. Unlimited attempts; a player's **best** score of the day counts. Escaping with the Heartstone ends the daily (no next mine). |
-| Daily medals | Gold / silver / bronze for daily top 3. Shown on the profile and next to names on every board. |
+| Daily medals | Gold / silver / bronze for daily top 3. Shown on the profile and next to names on every board, and ranked on their own Medals board (golds, then silvers, then bronzes). |
 | Rollover | 00:00 UTC. Medals are awarded after a 1-hour grace window so offline runs can sync. |
 | Accounts | Anonymous on first launch; optional link to **Sign in with Apple** (iOS) / **Google** (Android) to keep progress across devices. |
 | Display names | Unique, max 15 characters, Unicode allowed, profanity-filtered (en + zh). |
@@ -116,7 +116,8 @@ works offline.
 | `set_display_name(name text)` | Trim → Unicode NFKC normalise → strip control and zero-width characters → 1–15 characters, letters, digits, spaces, `_` and `-`, any script. `name_key = lower(normalised)`. Rejects banned-word substrings (checked on `name_key`). Uniqueness comes from the unique index, so a race returns `name_taken`. The first choice is free; after that, one change per 30 days. |
 | `endless_top(n)` | Best run per user, top `n`, with names and medal counts. |
 | `daily_top(d date, n)` | Best run per user for that date, ties broken by earliest `created_at`. |
-| `my_ranks()` | The caller's endless rank and today's daily rank. |
+| `medals_top(n)` | The medal table (migration 008): most golds, then silvers, then bronzes; a full tie goes to whoever completed the tally first. |
+| `my_ranks()` | The caller's endless, hardcore, today's daily and medal-table rank. |
 | `my_profile()` | The caller's name, runs played, best endless score, most mines escaped, deepest depth, gold/silver/bronze counts and last 20 runs. |
 | `award_daily_medals(d date)` | Takes the top 3 of `daily_top(d)`, counting only runs with `created_at < d + 1 day + grace`. Idempotent. |
 | `delete_my_account()` | Deletes the caller's `auth.users` row, which cascades to everything. Required by the App Store. |
@@ -154,7 +155,9 @@ Enable `pg_cron`. Every day at 01:05 UTC, run
   server upsert.
 - **UI**:
   - Title screen: two big buttons, **Daily Mine** and **Endless**.
-  - **Leaderboards** screen with tabs: Endless · Today · Yesterday (with medals).
+  - **Leaderboards** screen with tabs: Endless · Hardcore · Medals over
+    Today · Yesterday (with medals). Medals ranks miners by golds, then
+    silvers, then bronzes.
     Your own row is pinned at the bottom when you're off the visible list.
   - **Profile** screen: name (edit), medal tally, best scores, recent runs, link
     account, delete account.

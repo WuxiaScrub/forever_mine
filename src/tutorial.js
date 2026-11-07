@@ -112,8 +112,19 @@ Tutorial.STEPS = [
   // Dig through the dirt patch in the ground.
   { id: 'dig', done: (t, g) => g.player.y > 7 },
   // A dirt wall across the first room. Its corner tile first, while the wall
-  // still stops the miner: a diagonal push walks as well as aims...
-  { id: 'diag', done: (t, g) => t.since('diag') > 0 || g.player.y > 11 },
+  // still stops the miner: a diagonal push walks as well as aims... Once that
+  // tile is cracked or gone some other way (an upward swing from inside the
+  // wall, a jump-and-swing, a collapse) there is nothing left to aim at, so
+  // that counts too, as does already standing in or past the wall.
+  {
+    id: 'diag',
+    done: (t, g) => {
+      const c = CFG.tutorial.diagCorner, w = g.world;
+      const i = w.idx(c.x, c.y);
+      const touched = w.t[i] !== T.DIRT || w.hp[i] < CFG.mining.dirtHits;
+      return t.since('diag') > 0 || touched || g.player.x >= c.x || g.player.y > 11;
+    },
+  },
   // ...then straight through it.
   { id: 'side', done: (t, g) => t.since('side') > 0 || g.player.x > 12 || g.player.y > 11 },
   // Up onto the rock ledge (or past it).

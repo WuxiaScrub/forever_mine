@@ -20,6 +20,7 @@ Run each file in `migrations/`, **in order**, in the Supabase dashboard:
 | `005_gen_version_2.sql` | Moves the daily board to generator version 2 (gas pockets and the worm in the daily). |
 | `006_hardcore.sql` | Hardcore mode: `runs.mode` may be `hardcore`, its own board (`hardcore_top`), hardcore rank/best in `my_ranks` and `my_profile`, and `app_config.hardcore_score_pct`. |
 | `007_gen_version_3.sql` | Moves the daily board to generator version 3 (the daily's own layouts: fault lines, broad seam, switchbacks). |
+| `008_medal_board.sql` | The medal board: `medals_top` (most golds, then silvers, then bronzes) and `medals_rank` in `my_ranks`. |
 
 Never edit a file that has already been run — add the next number instead. Keep
 migrations plain ASCII: the SQL Editor can silently drop invisible characters
@@ -38,6 +39,7 @@ select count(*) from banned_words;                        -- 85
 select jobname, schedule from cron.job;                   -- award-daily-medals | 5 1 * * *
 select * from endless_top();                              -- empty, no error
 select * from hardcore_top();                             -- empty, no error
+select * from medals_top();                               -- one row per medalled miner, no error
 ```
 
 ## How it fits together
@@ -52,7 +54,8 @@ Clients never read or write tables. Everything goes through these functions
 | `endless_top(n)` | anyone | Best endless run per player. |
 | `hardcore_top(n)` | anyone | Best hardcore run per player. |
 | `daily_top(d, n)` | anyone | Best daily run per player for date `d` (today if null), with medals. |
-| `my_ranks()` | signed in | Caller's endless, hardcore and today's daily rank. |
+| `medals_top(n)` | anyone | Most daily medals: golds, then silvers, then bronzes. |
+| `my_ranks()` | signed in | Caller's endless, hardcore, today's daily and medal-table rank. |
 | `my_profile()` | signed in | Caller's name, medals, bests and last 20 runs. |
 | `delete_my_account()` | signed in | Deletes the account and everything attached. |
 | `award_daily_medals(d)` | scheduled job only | Gold/silver/bronze for daily `d`. |
@@ -87,9 +90,11 @@ psql -d fm -f supabase/migrations/004_name_regex_ascii.sql
 psql -d fm -f supabase/migrations/005_gen_version_2.sql
 psql -d fm -f supabase/migrations/006_hardcore.sql
 psql -d fm -f supabase/migrations/007_gen_version_3.sql
+psql -d fm -f supabase/migrations/008_medal_board.sql
 psql -d fm -f supabase/tests/10_behaviour.sql   # ERROR lines are expected rejections
 psql -d fm -f supabase/tests/20_medals.sql
 psql -d fm -f supabase/tests/30_hardcore.sql
+psql -d fm -f supabase/tests/40_medal_board.sql
 ```
 
 `003` needs pg_cron and is not part of the local run.
