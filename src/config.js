@@ -544,10 +544,10 @@ const CFG = {
 
   // AdMob, used only inside the native app (rewarded revive). Public IDs.
   ads: {
-    // true = Google's test ads. Keep it true for every build you run yourself
-    // (tapping your own live ads can get the AdMob account banned); set it
-    // to false only for the build you upload to the stores.
-    test: true,
+    // true = Google's test ads. false = live ads (the app is in production).
+    // Never tap your own live ads: it can get the AdMob account banned. For a
+    // debug build on your own phone, flip this to true locally and don't commit it.
+    test: false,
     android: { app: 'ca-app-pub-2298615637807323~3595318939', rewarded: 'ca-app-pub-2298615637807323/7422883305' },
     ios:     { app: 'ca-app-pub-2298615637807323~7639514885', rewarded: 'ca-app-pub-2298615637807323/8544393285' },
   },
