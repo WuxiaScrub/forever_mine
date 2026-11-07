@@ -85,14 +85,13 @@ The revive is in `src/ads.js`; its tuning is in `CFG.revive` and the ad IDs
 are in `CFG.ads` (`src/config.js`). The native app IDs are already in
 `AndroidManifest.xml` / `strings.xml` and `ios/App/App/Info.plist`.
 
-**Test ads vs real ads:** `CFG.ads.test` is `true`. Every build you run
-yourself shows Google's **test** ads, labelled "Test Ad". Never tap a live ad
-of your own: AdMob can ban the account for it. For the build you upload to the
-stores only:
+**Test ads vs real ads:** `CFG.ads.test` is `false`: the app is in
+production, so builds serve live ads. Never tap a live ad of your own: AdMob
+can ban the account for it. For a build you run yourself:
 
-1. Set `test: false` in `CFG.ads`.
-2. `npm run sync`, then archive / bundle.
-3. Set it back to `true` and commit that.
+1. Set `test: true` in `CFG.ads` (Google's **test** ads, labelled "Test Ad").
+2. `npm run sync`, then run it on the device.
+3. Set it back to `false` before archiving a store build; don't commit `true`.
 
 **What players see:**
 - On first launch: Google's consent form (EU/UK only), then Apple's tracking

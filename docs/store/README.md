@@ -26,8 +26,8 @@ Phase 7 paperwork. ✅ = ready in the repo, ☐ = needs you or a running app.
 6. ☐ **AdMob:** publish the EU consent message (see `docs/BUILD-mobile.md`).
    After the store listings are live, link them to the AdMob apps.
 7. ☐ **Screenshots**, once the app runs on your phone. Shot list in `listing.md`.
-8. ☐ Release build: set `CFG.ads.test = false`, `npm run sync`, archive / bundle,
-   upload to TestFlight / Play internal testing, then set it back to `true`.
+8. ✅ Production access granted; `CFG.ads.test` is now `false` (live ads).
+   Release build: `npm run sync`, archive / bundle, upload.
 
 ## Sign in with Apple / Google (phase 6)
 - ✅ Privacy policy, support page, privacy labels and description updated for it.
