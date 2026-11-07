@@ -205,6 +205,8 @@ const Online = {
 
   endlessTop(n) { return this.board('endless', 'endless_top', { n: n || 50 }, true); },
   hardcoreTop(n) { return this.board('hardcore', 'hardcore_top', { n: n || 50 }, true); },
+  /** Most daily medals: golds, then silvers, then bronzes. */
+  medalsTop(n) { return this.board('medals', 'medals_top', { n: n || 50 }, true); },
 
   /** `d` is a 'YYYY-MM-DD' UTC date. */
   dailyTop(d, n) { return this.board('daily:' + d, 'daily_top', { d, n: n || 50 }, true); },

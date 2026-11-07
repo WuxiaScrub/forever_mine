@@ -448,6 +448,9 @@ const CFG = {
       '########################',
       '########################',
     ],
+    // The dirt wall's corner tile the diagonal lesson aims at (column 11, the
+    // row above the room floor). Move it with the wall if the map changes.
+    diagCorner: { x: 11, y: 9 },
     lavaSpeed: 0.3,      // rows/sec, and no acceleration: the climb is the lesson
     reviveDelay: 1.2,    // seconds of death animation before the free get-up
     stepPause: 0.9,      // seconds the tick shows before the next prompt

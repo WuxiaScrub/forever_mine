@@ -88,6 +88,11 @@ html, body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+  /* Mobile browsers inflate "small" text on their own (iOS in landscape,
+     Android's font boosting), so the same card read bigger in the browser
+     than in the app. Sizes here are the sizes. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overscroll-behavior: none;
   touch-action: none;
   user-select: none;
@@ -281,13 +286,18 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .hint-k { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; color: #ff8a6a; }
 .hint-t { font-size: var(--fs-md); font-weight: 800; color: var(--ink); }
 .hint-b { font-size: var(--fs-sm); font-weight: 600; color: #d8cfe8; line-height: 1.35; }
-/* The tutorial's coach card: where the hint sits, but it stays up. */
+/* The tutorial's coach card: where the hint sits, but it stays up.
+   The mine scales with the screen (a tile is 1/13.5 of its short side), so
+   the card does too: a phone's 12.5px, growing on a tablet or desktop window
+   instead of shrinking to a footnote under 80px tiles. Everything inside is
+   in em off this one size. */
 .coach {
   position: absolute;
   top: calc(var(--safe-t) + 88px); left: 50%;
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  width: min(88vw, 360px);
-  padding: 9px 16px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: .25em;
+  font-size: clamp(var(--fs-sm), 3.2vmin, 19px);
+  width: min(88vw, 28.8em);
+  padding: .72em 1.28em .8em;
   background: rgba(12,9,20,.9);
   border: 1px solid rgba(255, 201, 94, .55);
   border-radius: 14px;
@@ -300,10 +310,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 }
 .coach.show { opacity: 1; transform: translate(-50%, 0); }
 .coach.done { border-color: #7ef0d0; }
-.coach-k { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; color: #ffc95e; }
+.coach-k { font-size: max(var(--fs-xs), .88em); font-weight: 800; letter-spacing: .1em; color: #ffc95e; }
 .coach.done .coach-k { color: #7ef0d0; }
 .coach.done .coach-k::before { content: '✓ '; }
-.coach-b { font-size: var(--fs-sm); font-weight: 600; color: #e6ddf4; line-height: 1.4; }
+.coach-b { font-size: 1em; font-weight: 600; color: #e6ddf4; line-height: 1.4; }
 .coach-b b { color: var(--ink); }
 /* The tutorial's closing panel: the three rules a real mine adds. */
 .tut-recap { list-style: none; margin: 12px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -817,7 +827,10 @@ body.attract #toast, body.attract #banner, body.attract #hint { display: none; }
 .btn.small { width: auto; display: inline-block; margin: 0; padding: 7px 12px; font-size: var(--fs-sm); }
 .btn:disabled { opacity: .5; cursor: default; }
 
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 10px; }
+/* Two rows: the all-time boards (three) over the dailies (two). */
+.tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 10px; }
+.tabs .tab { grid-column: span 2; }
+.tabs .tab:nth-child(n+4) { grid-column: span 3; }
 .tab {
   padding: 9px 4px; border-radius: 10px;
   border: 1px solid var(--edge); background: transparent;
@@ -857,6 +870,10 @@ body.attract #toast, body.attract #banner, body.attract #hint { display: none; }
 .medal-count.gold   { color: var(--medal-gold); }
 .medal-count.silver { color: var(--medal-silver); }
 .medal-count.bronze { color: var(--medal-bronze); }
+/* The medal board: the tally is the score, three fixed columns of it. */
+.board-row .vv.medal-cols { display: flex; font-size: var(--fs-sm); }
+.medal-cols .medal-count { display: inline-block; min-width: 34px; margin-left: 4px; text-align: left; }
+.medal-cols .medal-count.zero { opacity: .35; }
 
 .medal-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
 .medal-big {

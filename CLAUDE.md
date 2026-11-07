@@ -72,7 +72,8 @@ Game Modes
   never the daily.
 * The daily rolls over at 00:00 UTC. Gold, silver and bronze go to the day's
   top three once a short grace window has passed (so offline runs can sync).
-  Medal counts show on the profile and beside names on every board.
+  Medal counts show on the profile and beside names on every board, and a
+  Medals board ranks miners by golds, then silvers, then bronzes.
 
 Tutorial
 
