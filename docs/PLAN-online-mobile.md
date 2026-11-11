@@ -173,8 +173,9 @@ Enable `pg_cron`. Every day at 01:05 UTC, run
   the Tunneler worm (`Game.hazards`); the worm's timing and path stay random.
 - **Rules**: mine-1 settings (Heartstone row and threat level); base stats; full
   satchel; shops work as normal. Score = whatever is carried out through the
-  camp, plus 7,000 for the Heartstone. A death scores 0. The score is still
-  recorded in your history, but it can't place on the board.
+  camp, plus 7,000 for the Heartstone, scored the moment it is taken and kept
+  even on a death (so such a run can place on the board). A death without
+  it scores 0: still recorded in your history, but it can't place.
 - **Rollover during a run**: the run counts for the day it **started**. The
   server accepts it until the grace window closes.
 - **Title card**: today's date, a countdown to the next daily, your best today,

@@ -486,6 +486,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   background: radial-gradient(circle at 38% 32%, #a04a37, #5a271d);
 }
 #dynamite.depleted { opacity: .42; }
+/* DYNAMITE is the longest label on a small button: tighten it to fit. */
+#dynamite > span[data-i18n] { letter-spacing: .02em; }
 #dynamite .count {
   position: absolute; right: -3px; top: -3px;
   min-width: 21px; height: 21px; padding: 0 4px;
