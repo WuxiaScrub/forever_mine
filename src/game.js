@@ -148,7 +148,7 @@ class Game {
     if (!quiet) this.track(s => { s.runs++; });
     this.campaign = {
       mine: 1, upgrades: {}, score: 0,
-      found: 0, spent: 0, hearts: 0, depth: 0, gems: 0, bonus: 0,
+      found: 0, spent: 0, hearts: 0, taken: 0, depth: 0, gems: 0, bonus: 0,
       scoreId: 0, result: null,
       runId: newRunId(), playMs: 0, online: null,
       daily, dailyRecord: false,
@@ -166,7 +166,7 @@ class Game {
   startTutorial() {
     this.campaign = {
       mine: 1, upgrades: {}, score: 0,
-      found: 0, spent: 0, hearts: 0, depth: 0, gems: 0,
+      found: 0, spent: 0, hearts: 0, taken: 0, depth: 0, gems: 0, bonus: 0,
       scoreId: 0, result: null,
       runId: null, playMs: 0, online: null,
       daily: null, dailyRecord: false,
@@ -176,7 +176,7 @@ class Game {
   }
 
   /** Per-mine numbers. `lost` is what was still being carried at the end. */
-  resetRunStats() { this.runStats = { depth: 0, lost: 0, hauled: 0 }; }
+  resetRunStats() { this.runStats = { depth: 0, lost: 0, hauled: 0, heart: 0 }; }
 
   /** How hard a mine leans on the player; the last entry covers every deeper one. */
   threat() {
@@ -523,9 +523,30 @@ class Game {
     return v;
   }
 
-  /** Everything at risk right now, the Heartstone included. */
-  carryValue() {
-    return this.purse() + (this.player && this.player.hasHeartstone ? CFG.gems.heartstoneValue : 0);
+  /**
+   * Everything at risk right now. The Heartstone is not part of it: it goes
+   * straight onto the score the moment it is taken (see takeHeartstone).
+   */
+  carryValue() { return this.purse(); }
+
+  /**
+   * The Heartstone scores its flat value at once, Hardcore's bonus included,
+   * and keeps it whatever happens on the way up. Carrying it out is still what
+   * opens the next mine. The practice mine scores nothing.
+   */
+  takeHeartstone(g) {
+    this.player.hasHeartstone = true;
+    if (!this.tutorial) {
+      const c = this.campaign;
+      const v = CFG.gems.heartstoneValue;
+      const bonus = c.hardcore ? Math.round(v * CFG.hardcore.scoreBonus) : 0;
+      c.score += v + bonus;
+      c.bonus += bonus;
+      c.taken++;
+      this.runStats.heart = v + bonus;
+      this.fx.text(g.x, g.y - 0.6, loc('banner.heartstonePaid', { v: fmt(v + bonus) }), '#ffc95e', { size: 14, life: 1.6 });
+    }
+    this.awakenVolcano();
   }
 
   /**
@@ -553,9 +574,7 @@ class Game {
 
     if (this.tutorial) this.tutorial.notify(g.heart ? 'heart' : 'gem');
     if (g.heart) {
-      this.player.hasHeartstone = true;
-      this.fx.flyToHud(scr.x, scr.y, '#ff7a3c', CFG.gems.heartstoneValue);
-      this.awakenVolcano();
+      this.takeHeartstone(g);
     } else {
       // A gem a bat dropped keeps the value it was stolen at; only a gem fresh
       // out of the rock counts toward what the campaign found.
@@ -632,9 +651,6 @@ class Game {
       tier,
       fresh,
     }));
-    if (this.player.hasHeartstone) {
-      setTimeout(() => this.ui.toast(loc('toast.heartstoneAtSurface'), 2600), 400);
-    }
   }
 
   /**
@@ -650,21 +666,22 @@ class Game {
 
   /**
    * Walked back into the camp: the haul becomes score and this mine is over.
-   * Hardcore's bonus is paid here, on what made it out, so it never makes a
-   * lantern any cheaper on the way.
+   * Hardcore's bonus on the gems is paid here, on what made it out, so it
+   * never makes a lantern any cheaper on the way. (The Heartstone, bonus and
+   * all, was already scored when it was taken.)
    */
   reachCamp() {
     const c = this.campaign;
     const p = this.player;
     const hauled = this.purse();
     const winning = p.hasHeartstone;
-    const base = hauled + (winning ? CFG.gems.heartstoneValue : 0);
+    const base = hauled;   // the Heartstone was scored when it was taken
     const bonus = c.hardcore ? Math.round(base * CFG.hardcore.scoreBonus) : 0;
     const total = base + bonus;
 
     c.score += total;
     c.bonus += bonus;
-    this.runStats.hauled = total;
+    this.runStats.hauled = total + (winning ? this.runStats.heart : 0);
     this.carry.length = 0;
     this.volcano = false;
     Sfx.stopRumble();
@@ -681,7 +698,7 @@ class Game {
       const secs = Math.round(this.mineTime);
       this.track(s => { s.hearts++; if (!s.fastest || secs < s.fastest) s.fastest = secs; });
       Sfx.play('win');
-      this.ui.banner(loc('sum.escaped'), loc('banner.heartstonePaid', { v: fmt(CFG.gems.heartstoneValue) }));
+      this.ui.banner(loc('sum.escaped'), total > 0 ? loc('fx.hauled', { v: fmt(total) }) : '');
       this.ui.syncWallet(this);
       setTimeout(() => { if (this.state === 'play') this.endRun('win'); }, 2200);
       return;

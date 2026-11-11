@@ -58,6 +58,10 @@ class Tutorial {
       if (this.pause <= 0) this.begin(game);
       return;
     }
+    // Dynamite never runs out here: a player who spent their sticks before
+    // the lesson that needs them (or on it) gets the satchel refilled.
+    const p = game.player;
+    if (p.dynamite === 0 && game.dynamites.length === 0) { p.dynamite = p.dynMax; game.ui.syncDynamite(p); }
     const s = Tutorial.STEPS[this.step];
     if (s.keep) s.keep(this, game);
     if (!s.done(this, game)) return;
@@ -140,13 +144,14 @@ Tutorial.STEPS = [
   { id: 'down', done: (t, g) => g.player.y > 11 },
   // Crack the dirt overhead and get out from under it.
   { id: 'collapse', done: (t) => t.since('fall') > 0 },
-  // Rock: only dynamite moves it. A player who wasted their sticks gets more.
+  // Rock: only dynamite moves it. A blast now counts; so does a rock wall
+  // already blown open earlier, or a miner already through to the seam, so
+  // dynamite used ahead of the prompt can't leave the lesson unfinishable.
   {
     id: 'dynamite',
-    done: (t) => t.since('blast') > 0,
-    keep: (t, g) => {
-      const p = g.player;
-      if (p.dynamite === 0 && g.dynamites.length === 0) { p.dynamite = p.dynMax; g.ui.syncDynamite(p); }
+    done: (t, g) => {
+      const r = CFG.tutorial.dynRock, w = g.world, p = g.player;
+      return t.since('blast') > 0 || w.get(r.x, r.y) !== T.ROCK || (p.x < r.x && p.y > 11);
     },
   },
   // The seam behind the rock. Counted over the whole tutorial: there are only four.

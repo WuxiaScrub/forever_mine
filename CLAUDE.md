@@ -37,7 +37,8 @@ Campaigns
   deeper mine: upgrades carry over, cash does not (what was carried out is
   score, never spendable).
 * Walking out without the Heartstone, or dying, ends the campaign. Score from
-  mines already escaped is kept; the current mine's pockets are lost on death.
+  mines already escaped is kept, as is a Heartstone already taken; the current
+  mine's pockets are lost on death.
 * Nothing carries between campaigns — no vault, no permanent upgrades. Every
   campaign starts at mine 1 with base stats and 0 gems.
 * Each later mine puts the Heartstone deeper (`CFG.campaign.heartstoneStep`)
@@ -66,8 +67,9 @@ Game Modes
   stretches (`CFG.hardcore`). Half the supply lanterns (every other station;
   the first is kept, mine 1 included), health and dynamite are NOT refilled
   between mines, and the revive gets the miner up on 3 hearts, not a full bar.
-  In return everything carried out through the camp, Heartstone included,
-  scores +50% (paid at the camp, so lanterns are no cheaper). It has its own
+  In return everything carried out through the camp scores +50% (paid at the
+  camp, so lanterns are no cheaper), and so does the Heartstone (paid when
+  it is taken). It has its own
   global board (`mode = 'hardcore'`) and its own personal board. Endless only,
   never the daily.
 * The daily rolls over at 00:00 UTC. Gold, silver and bronze go to the day's
@@ -338,9 +340,10 @@ Immediately trigger a major escalation:
 * The escape uses the mine that the player created during the run.
 
 The Heartstone should be the game’s major climax. It is worth a flat
-`CFG.gems.heartstoneValue` (7,000), paid only if it reaches the surface camp,
-and it is never spendable at a lantern on the way up. Carrying it out opens
-the next mine of the campaign.
+`CFG.gems.heartstoneValue` (7,000), added straight to the score the moment
+it is taken (Hardcore's +50% included) and kept even if the miner dies on the
+way up. It is never carried loot, so it is never spendable at a lantern.
+Carrying it out is what opens the next mine of the campaign.
 
 Normal runs do not require an escape timer. The player can voluntarily cash out by returning upward, but the Heartstone creates the forced escape sequence.
 

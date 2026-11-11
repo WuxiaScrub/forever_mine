@@ -1126,18 +1126,18 @@ class UI {
     const r = c.result || null;
     const dayBest = daily && game.save.daily && game.save.daily.date === c.daily ? game.save.daily.best : 0;
     const note = daily ? (c.dailyRecord ? loc('sum.dailyRecord') : '')
-      : isDeath && c.mine > 1 && c.score > 0 ? loc('sum.escapedKept')
+      : isDeath && c.score > 0 ? loc('sum.escapedKept')
       : r && r.record ? loc('score.newBest')
       : r && r.rank ? loc('score.ranked', { n: r.rank })
       : '';
 
-    const heartsValue = c.hearts * CFG.gems.heartstoneValue;
+    const heartsValue = (c.taken || 0) * CFG.gems.heartstoneValue;   // scored when taken
     const lost = Math.max(0, c.found + heartsValue + c.bonus - c.spent - c.score);
     const line = (k, v, cls) => `<div class="row"><span>${loc(k)}</span><span class="${cls || ''}">${v}</span></div>`;
     const ledger = `
       <div class="help ledger">
         ${line('sum.found', '+' + fmt(c.found))}
-        ${c.hearts ? line('sum.heartstones', '+' + fmt(heartsValue)) : ''}
+        ${c.taken ? line('sum.heartstones', '+' + fmt(heartsValue)) : ''}
         ${c.bonus ? line('sum.hardcoreBonus', '+' + fmt(c.bonus)) : ''}
         ${line('sum.spent', '−' + fmt(c.spent))}
         ${lost ? line('sum.lost', '−' + fmt(lost)) : ''}
